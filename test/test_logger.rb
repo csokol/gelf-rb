@@ -157,6 +157,28 @@ class TestLogger < Test::Unit::TestCase
       end
     end
 
+    context "with logger with formatter and mocked sender" do
+      class SimpleFormatter
+        def call(severity, _, progname, msg)
+          "#{severity} - #{progname} - #{msg}"
+        end
+      end
+      setup do
+        Socket.stubs(:gethostname).returns('stubbed_hostname')
+        @logger = GELF::Logger.new
+        @sender = mock
+        @logger.instance_variable_set('@sender', @sender)
+        @logger.formatter = DumbFormatter.new
+      end
+
+      should "format message using formatter" do
+        @logger.expects(:notify_with_level!).with do |level, hash|
+          hash['short_message'] == '1 - somefac - Some message'
+        end
+        @logger.add(GELF::INFO, "Some message", "somefac")
+      end
+    end
+
     GELF::Levels.constants.each do |const|
       # logger.error "Argument #{ @foo } mismatch."
       should "call add with level #{const} from method name, message from parameter" do

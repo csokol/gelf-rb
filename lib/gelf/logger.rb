@@ -25,7 +25,7 @@ module GELF
           message_hash[key.to_s] = value
         end
       else
-        message_hash['short_message'] = message.to_s
+        message_hash['short_message'] = formatter.nil? ? message.to_s : formatter.call(level, nil, progname, message)
       end
 
       if message.is_a?(Exception)
